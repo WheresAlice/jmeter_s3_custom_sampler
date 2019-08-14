@@ -17,6 +17,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
@@ -46,6 +48,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         defaultParameters.addArgument("proxy_port", "");
         defaultParameters.addArgument("enpoint", "");
         defaultParameters.addArgument("region", "");
+        defaultParameters.addArgument("acl", "");
         return defaultParameters;
     }
 
@@ -62,6 +65,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         String proxy_port = context.getParameter("proxy_port");
         String endpoint = context.getParameter("endpoint");
         String region = context.getParameter("region");
+        String acl = context.getParameter("acl");
 
         log.debug("runTest:method=" + method + " local_file_path=" + local_file_path + " bucket=" + bucket + " object=" + object);
 
@@ -90,14 +94,17 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
 
             if (method.equals("GET")) {
                 File file = new File(local_file_path);
-                //meta= s3Client.getObject(new GetObjectRequest(bucket, object), file);
                 S3Object s3object = s3Client.getObject(bucket, object);
                 S3ObjectInputStream stream = s3object.getObjectContent();
-                //while(stream.skip(1024*1024)>0);
                 stream.close();
             } else if (method.equals("PUT")) {
                 File file = new File(local_file_path);
-                s3Client.putObject(bucket, object, file);
+                PutObjectRequest por = new PutObjectRequest(bucket, object, file);
+                if (acl != null && !acl.isEmpty()) {
+                  por = por.withCannedAcl(CannedAccessControlList.valueOf(acl));
+                }
+
+                s3Client.putObject(por);
             }
 
             result.sampleEnd(); // stop stopwatch
