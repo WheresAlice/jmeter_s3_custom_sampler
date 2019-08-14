@@ -77,7 +77,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
                 config.setProxyPort(Integer.parseInt(proxy_port));
             }
 
-            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withClientConfiguration(config);
+            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withClientConfiguration(config).withRegion(region);
             if (key_id != null && !key_id.isEmpty()) {
                 builder = builder.withCredentials(new StaticCredentialsProvider(new BasicAWSCredentials(key_id, secret_key)));
             }
