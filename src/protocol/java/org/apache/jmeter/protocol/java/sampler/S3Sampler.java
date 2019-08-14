@@ -10,11 +10,14 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
 import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
@@ -24,7 +27,6 @@ import org.apache.log.Logger;
 
 import java.io.File;
 import java.io.Serializable;
-
 
 public class S3Sampler extends AbstractJavaSamplerClient implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -42,7 +44,8 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         defaultParameters.addArgument("local_file_path", "");
         defaultParameters.addArgument("proxy_host", "");
         defaultParameters.addArgument("proxy_port", "");
-        defaultParameters.addArgument("endpoint", "");
+        defaultParameters.addArgument("enpoint", "");
+        defaultParameters.addArgument("region", "");
         return defaultParameters;
     }
 
@@ -58,6 +61,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         String proxy_host = context.getParameter("proxy_host");
         String proxy_port = context.getParameter("proxy_port");
         String endpoint = context.getParameter("endpoint");
+        String region = context.getParameter("region");
 
         log.debug("runTest:method=" + method + " local_file_path=" + local_file_path + " bucket=" + bucket + " object=" + object);
 
@@ -72,14 +76,16 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
             if (proxy_port != null && !proxy_port.isEmpty()) {
                 config.setProxyPort(Integer.parseInt(proxy_port));
             }
-            //config.setProtocol(Protocol.HTTP);
 
-            AWSCredentials credentials = new BasicAWSCredentials(key_id, secret_key);
-
-            AmazonS3 s3Client = new AmazonS3Client(credentials, config);
-            if (endpoint != null && !endpoint.isEmpty()) {
-                s3Client.setEndpoint(endpoint);
+            AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withClientConfiguration(config);
+            if (key_id != null && !key_id.isEmpty()) {
+                builder = builder.withCredentials(new StaticCredentialsProvider(new BasicAWSCredentials(key_id, secret_key)));
             }
+
+            if (endpoint != null && !endpoint.isEmpty()) {
+                builder = builder.withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region));
+            }
+            AmazonS3 s3Client = builder.build();
             ObjectMetadata meta = null;
 
             if (method.equals("GET")) {
