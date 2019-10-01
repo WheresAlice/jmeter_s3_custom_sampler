@@ -1,8 +1,8 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>bigstepinc</groupId>
+    <groupId>protocol.java.org.apache.jmeter.protocol.java.sampler</groupId>
     <artifactId>jmeter-s3-sampler</artifactId>
-    <version>0.1.1</version>
+    <version>0.2</version>
     <properties>
      <maven.compiler.source>1.6</maven.compiler.source>
      <maven.compiler.target>1.6</maven.compiler.target>
@@ -20,8 +20,8 @@
                     <fork>true</fork>
                     <meminitial>256m</meminitial>
                     <maxmem>512m</maxmem>
-                    <source>7</source>
-                    <target>7</target>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>
