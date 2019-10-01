@@ -95,6 +95,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
                     Files.copy(stream, Paths.get(local_file_path), StandardCopyOption.REPLACE_EXISTING);
                 }
                 stream.close();
+                meta = s3object.getObjectMetadata();
             } else if (method.equals("PUT")) {
                 File file = new File(local_file_path);
                 PutObjectRequest por = new PutObjectRequest(bucket, object, file);
@@ -108,7 +109,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
             result.sampleEnd(); // stop stopwatch
             result.setSuccessful(true);
             if (meta != null) {
-                result.setResponseMessage("OK on url:" + bucket + "/" + object + ". Length=" + meta.getContentLength());
+                result.setResponseMessage("OK on url:" + bucket + "/" + object + ". Length=" + meta.getContentLength() + ". Last Modified=" + meta.getLastModified() + ". Storage Class=" + meta.getStorageClass());
             } else {
                 result.setResponseMessage("OK on url:" + bucket + "/" + object + ".No metadata");
             }
