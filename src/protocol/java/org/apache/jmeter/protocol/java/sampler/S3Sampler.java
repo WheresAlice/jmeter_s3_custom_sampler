@@ -3,23 +3,16 @@
 *  Distrubuted under the same license as apache jmeter itself.
 * http://www.apache.org/licenses/LICENSE-2.0
 */
-package com.bigstep;
+package protocol.java.org.apache.jmeter.protocol.java.sampler;
 
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
-import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.model.*;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
 import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
@@ -29,9 +22,12 @@ import org.apache.log.Logger;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class S3Sampler extends AbstractJavaSamplerClient implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger log = LoggingManager.getLoggerForClass();
 
     // set up default arguments for the JMeter GUI
@@ -46,7 +42,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         defaultParameters.addArgument("local_file_path", "");
         defaultParameters.addArgument("proxy_host", "");
         defaultParameters.addArgument("proxy_port", "");
-        defaultParameters.addArgument("enpoint", "");
+        defaultParameters.addArgument("endpoint", "");
         defaultParameters.addArgument("region", "");
         defaultParameters.addArgument("acl", "");
         return defaultParameters;
@@ -93,9 +89,11 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
             ObjectMetadata meta = null;
 
             if (method.equals("GET")) {
-                File file = new File(local_file_path);
                 S3Object s3object = s3Client.getObject(bucket, object);
                 S3ObjectInputStream stream = s3object.getObjectContent();
+                if (local_file_path != null && !local_file_path.isEmpty()) {
+                    Files.copy(stream, Paths.get(local_file_path), StandardCopyOption.REPLACE_EXISTING);
+                }
                 stream.close();
             } else if (method.equals("PUT")) {
                 File file = new File(local_file_path);
