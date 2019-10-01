@@ -29,7 +29,7 @@ Run JMeter as usual
 ./bin/jmeter
 ```
 
-Add a new jmeter Java sampler, use the com.bigstep.S3Sampler class.
+Add a new jmeter Java sampler, use the `protocol.java.org.apache.jmeter.protocol.java.sampler.S3Sampler` class.
 ![Alt text](img/jmeter1.png?raw=true "Select JMeter custom sampler")
 
 Add your AWS key id, bucket, object and the rest.
