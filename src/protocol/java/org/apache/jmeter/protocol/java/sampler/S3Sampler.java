@@ -13,15 +13,26 @@ import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileStream;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumReader;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
 import org.apache.jmeter.protocol.java.sampler.JavaSamplerContext;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.springframework.util.StreamUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -93,6 +104,33 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
                 S3ObjectInputStream stream = s3object.getObjectContent();
                 if (local_file_path != null && !local_file_path.isEmpty()) {
                     Files.copy(stream, Paths.get(local_file_path), StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    if (object.endsWith(".avro")) {
+                        try {
+                            DatumReader<Object> reader = new GenericDatumReader<>();
+                            DataFileStream<Object> streamReader = new DataFileStream<>(stream, reader);
+                            Schema schema = streamReader.getSchema();
+                            ByteArrayOutputStream output = new ByteArrayOutputStream();
+                            DatumWriter<Object> writer = new GenericDatumWriter<>(schema);
+                            JsonEncoder jsonEncoder = EncoderFactory.get().jsonEncoder(schema, output, true);
+
+                            while (streamReader.hasNext()) {
+                                Object datum;
+                                datum = streamReader.next();
+                                log.debug(datum.toString());
+                                writer.write(datum, jsonEncoder);
+                                jsonEncoder.flush();
+                            }
+                            output.flush();
+                            log.info("Successfully parsed Avro to JSON");
+                            result.setResponseData(output.toByteArray());
+                        } catch(Exception e) {
+                            log.warn("😔 Couldn't parse Avro " + e.getMessage());
+                            result.setResponseData(StreamUtils.copyToString(stream, StandardCharsets.UTF_8), "UTF-8");
+                        }
+                    } else {
+                        result.setResponseData(StreamUtils.copyToString(stream, StandardCharsets.UTF_8), "UTF-8");
+                    }
                 }
                 stream.close();
                 meta = s3object.getObjectMetadata();
@@ -123,7 +161,7 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
             // get stack trace as a String to return as document data
             java.io.StringWriter stringWriter = new java.io.StringWriter();
             e.printStackTrace(new java.io.PrintWriter(stringWriter));
-            result.setResponseData(stringWriter.toString());
+            result.setResponseData(stringWriter.toString(), "UTF-8");
             result.setDataType(org.apache.jmeter.samplers.SampleResult.TEXT);
             result.setResponseCode("500");
         }

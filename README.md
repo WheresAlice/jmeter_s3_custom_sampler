@@ -13,7 +13,7 @@ This is a custom java sampler class that can be used to benchmark any S3 compati
 Build using maven (or download from Releases)
 
 ```shell script
-mvn package
+mvn clean package
 ```
 
 Extract zip into JMeter directory
@@ -29,6 +29,8 @@ Run JMeter as usual
 ./bin/jmeter
 ```
 
+Note that upgrading isn't really supported at the moment, you will need to manually replace jars in the `lib` and `lib/ext` directories.
+
 ### S3Sampler
 
 Add a new JMeter Java sampler, use the `protocol.java.org.apache.jmeter.protocol.java.sampler.S3Sampler` class.
@@ -36,6 +38,8 @@ Add a new JMeter Java sampler, use the `protocol.java.org.apache.jmeter.protocol
 
 Add your AWS key id, bucket, object and the rest.
 ![Alt text](img/jmeter2.png?raw=true "Configure JMeter sampler")
+
+When reading data, if you are setting `local_file_path` then this file will be created with the contents of the S3 key.  If `local_file_path` is not set, then the content will be returned as Response Data, and will be deserialised if the content is avro format.
 
 ### S3ListSampler
 
