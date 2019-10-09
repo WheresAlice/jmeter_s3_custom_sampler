@@ -7,6 +7,7 @@ package protocol.java.org.apache.jmeter.protocol.java.sampler;
 
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.internal.StaticCredentialsProvider;
@@ -53,6 +54,10 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         defaultParameters.addArgument("local_file_path", "");
         defaultParameters.addArgument("proxy_host", "");
         defaultParameters.addArgument("proxy_port", "");
+        defaultParameters.addArgument("proxy_scheme", "");
+        defaultParameters.addArgument("proxy_username", "");
+        defaultParameters.addArgument("proxy_password", "");
+
         defaultParameters.addArgument("endpoint", "");
         defaultParameters.addArgument("region", "");
         defaultParameters.addArgument("acl", "");
@@ -70,6 +75,9 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
         String secret_key = context.getParameter("secret_key");
         String proxy_host = context.getParameter("proxy_host");
         String proxy_port = context.getParameter("proxy_port");
+        String proxy_scheme = context.getParameter("proxy_scheme");
+        String proxy_username = context.getParameter("proxy_username");
+        String proxy_password = context.getParameter("proxy_password");
         String endpoint = context.getParameter("endpoint");
         String region = context.getParameter("region");
         String acl = context.getParameter("acl");
@@ -87,6 +95,20 @@ public class S3Sampler extends AbstractJavaSamplerClient implements Serializable
             if (proxy_port != null && !proxy_port.isEmpty()) {
                 config.setProxyPort(Integer.parseInt(proxy_port));
             }
+            if (proxy_scheme != null && !proxy_scheme.isEmpty()) {
+                if (proxy_scheme.toLowerCase().equals("http")) {
+                    config.setProxyProtocol(Protocol.HTTP);
+                } else if (proxy_scheme.toLowerCase().equals("https")) {
+                    config.setProxyProtocol(Protocol.HTTPS);
+                }
+            }
+            if (proxy_username != null && !proxy_username.isEmpty()) {
+                config.setProxyUsername(proxy_username);
+            }
+            if (proxy_password != null && !proxy_password.isEmpty()) {
+                config.setProxyPassword(proxy_password);
+            }
+
 
             AmazonS3ClientBuilder builder = AmazonS3ClientBuilder.standard().withClientConfiguration(config).withRegion(region);
             if (key_id != null && !key_id.isEmpty()) {

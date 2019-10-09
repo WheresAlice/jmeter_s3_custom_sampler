@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>protocol.java.org.apache.jmeter.protocol.java.sampler</groupId>
     <artifactId>jmeter-s3-sampler</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
     <properties>
      <maven.compiler.source>1.6</maven.compiler.source>
      <maven.compiler.target>1.6</maven.compiler.target>
